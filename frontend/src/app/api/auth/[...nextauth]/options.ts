@@ -24,8 +24,14 @@ export const authOptions = {
   pages: {
     signIn: "/",
   },
-  callbaks: {
-    async signIn({ user, account }: { user: CustomUser; account: Account | null }) {
+  callbacks: {
+    async signIn({
+      user,
+      account,
+    }: {
+      user: CustomUser;
+      account: Account | null;
+    }) {
       try {
         console.log("The user data is: ", user);
         console.log("The account is: ", account);
@@ -38,13 +44,14 @@ export const authOptions = {
           image: user?.image,
         };
 
-        console.log("payload: ", payload);
+        console.log("payload: ", payload, LOGIN_URL);
 
         const { data } = await axios.post(LOGIN_URL, payload);
+        console.log("data after login: ", data);
 
         user.id = data.user?.id.toString();
         user.token = data?.user?.token;
-        // user.provider = data?.user?.provider;
+        user.provider = data?.user?.provider;
 
         return true;
       } catch (error) {

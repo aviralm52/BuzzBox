@@ -1,4 +1,4 @@
-// "use client";
+"use client";
 
 import {
   Dialog,
@@ -15,8 +15,8 @@ import { Button } from "../ui/button";
 
 const handleGoogleLogin = () => {
   signIn("google", {
-    callbackUrl: "/dashboard",
     redirect: true,
+    callbackUrl: "/dashboard",
   });
 };
 

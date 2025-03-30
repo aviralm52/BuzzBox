@@ -23,6 +23,7 @@ class AuthController {
           email: body.email,
         },
       });
+      console.log("user find: ", findUser);
 
       if (!findUser) {
         findUser = await prisma.user.create({
@@ -35,10 +36,13 @@ class AuthController {
         email: body.email,
         id: findUser.id,
       };
+      console.log("created jwt payload: ", JWTPayload);
 
       const token = jwt.sign(JWTPayload, process.env.JWT_SECRET, {
         expiresIn: "365d",
       });
+
+      console.log("user created: ", token);
 
       return response.json({
         message: "Logged in successfully!",
@@ -48,6 +52,7 @@ class AuthController {
         },
       });
     } catch (error) {
+      console.log("error in login: ", error);
       return response
         .status(500)
         .json({ message: "Something went wrong, Please try again" });
