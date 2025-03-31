@@ -1,71 +1,87 @@
 "use client";
 
 import { toast } from "sonner";
-import { useState } from "react";
 import axios, { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
+import React, { useState, useEffect, Dispatch, SetStateAction } from "react";
 
 import {
   Dialog,
   DialogTitle,
   DialogHeader,
   DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
+import {
+  createChatSchema,
+  createChatSchemaType,
+} from "@/validations/groupChatValidations";
 import { clearCache } from "@/actions/common";
 import { CHAT_GROUP_URL } from "@/lib/apiEndPoints";
-import { zodResolver } from "@hookform/resolvers/zod"
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CustomUser } from "@/app/api/auth/[...nextauth]/options";
-import { createChatSchema, createChatSchemaType } from "@/validations/groupChatValidations";
 
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { GroupChatType } from "../../../types";
 
-
-const CreateChat = ({ user }: { user: CustomUser }) => {
-
-  const [open, setOpen] = useState(false);
+export default function EditGroupChat({
+  user,
+  group,
+  open,
+  setOpen,
+}: {
+  user: CustomUser;
+  group: GroupChatType;
+  open: boolean;
+  setOpen: Dispatch<SetStateAction<boolean>>;
+}) {
   const [loading, setLoading] = useState(false);
 
-
-  const { register, handleSubmit, formState: { errors } } = useForm<createChatSchemaType>({
-    resolver: zodResolver(createChatSchema)
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<createChatSchemaType>({
+    resolver: zodResolver(createChatSchema),
   });
 
-  const onSubmit = async (payload: createChatSchemaType) => {
-    try {
+  useEffect(() => {
+    setValue("title", group.title);
+    setValue("passcode", group.passcode);
+  }, [group]);
 
+  const onSubmit = async (payload: createChatSchemaType) => {
+    // console.log("The payload is", payload);
+    try {
       setLoading(true);
-      const { data } = await axios.post(CHAT_GROUP_URL, { ...payload, user_id: user.id }, { headers: { Authorization: user.token } })
+      const { data } = await axios.put(`${CHAT_GROUP_URL}/${group.id}`, payload, {
+        headers: {
+          Authorization: user.token,
+        },
+      });
 
       if (data?.message) {
-        clearCache("dashboard");
-        setLoading(false);
         setOpen(false);
         toast.success(data?.message);
+        clearCache("dashboard");
       }
-
+      setLoading(false);
     } catch (error) {
-
       setLoading(false);
       if (error instanceof AxiosError) {
         toast.error(error.message);
       } else {
-        toast.error("Something went wrong. please try again!");
+        toast.error("Something went wrong.please try again!");
       }
-
     }
-  }
-
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>Create Chat</Button>
-      </DialogTrigger>
       <DialogContent onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Create your new Chat</DialogTitle>
+          <DialogTitle>Update group chat</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mt-4">
@@ -84,9 +100,5 @@ const CreateChat = ({ user }: { user: CustomUser }) => {
         </form>
       </DialogContent>
     </Dialog>
-
-  )
+  );
 }
-
-
-export default CreateChat
